@@ -61,60 +61,51 @@ if(isset($_REQUEST['operacion']) && isset($_REQUEST['key']))
 							if($_FILES['archivo']['error'])
 							{
 								switch ($_FILES['archivo']['error']) {
-									case 1:		echo "Error, El tamaño de la imagen supera el limite permitido 2Mb.";break;
-									case 2:		echo "Error, El tamaño de la imagen supera el limite permitido 2Mb";break;
-									case 3:		echo "Error, La transferencia de la imagen se ha interrumpido";break;
-									case 4:		echo "Error, El tamaño de la imagen enviado es nulo";break;
+									case 1:		echo "¡ERROR!, El tamaño de la imagen supera el limite permitido 2Mb.";break;
+									case 2:		echo "¡ERROR!, El tamaño de la imagen supera el limite permitido 2Mb.";break;
+									case 3:		echo "¡ERROR!, La transferencia de la imagen se ha interrumpido.";break;
+									case 4:		echo "¡ERROR!, El tamaño de la imagen enviado es nulo.";break;
 								}
 							}
 							else
 							{
 								if(isset($_FILES['archivo']['name']))
 								{
-									if($_FILES['archivo']['size'] <= 1048576)
+									$imagen = generarNombreImagen($_FILES['archivo']['type']);
+									if($imagen)
 									{
-										$tamaño = getimagesize($_FILES['archivo']['tmp_name']);
-										if($tamaño[0] <= 400 && $tamaño[1] <= 400)
+										eliminarImagen($carpeta_destino,$imagen);
+										if(move_uploaded_file($_FILES['archivo']['tmp_name'], $carpeta_destino.$imagen))
 										{
-											$imagen = generarNombreImagen($_FILES['archivo']['type']);
-											if($imagen)
+											if($_REQUEST['nombre'] && $_REQUEST['codigo'] && $_REQUEST['categoria'] && $_REQUEST['descripcion'] && $_REQUEST['precio'] && $_REQUEST['stock'])
+											{
+												$nombre 		= $_REQUEST['nombre'];
+												$codigo 		= $_REQUEST['codigo'];
+												$categoria 		= $_REQUEST['categoria'];
+												$descripcion 	= $_REQUEST['descripcion'];
+												$precio 		= $_REQUEST['precio'];
+												$stock 			= $_REQUEST['stock'];
+												$cadenaSQL		= "INSERT INTO productos (`nombre`,`codigo`,`categoria`,`descripcion`,`precio`,`stock`,`imagen`) VALUES ('".$nombre."','".$codigo."','".$categoria."','".$descripcion."',".$precio.",".$stock.",'".$imagen."')";
+												$consulta = mysqli_query($conexion,$cadenaSQL);
+												if($consulta)
+												{
+													echo "Los datos se grabaron correctamente.";									
+												}
+												else
+												{
+													eliminarImagen($carpeta_destino,$imagen);
+													echo "¡ERROR!, no se grabaron los datos en la base.";
+												}
+											}
+											else
 											{
 												eliminarImagen($carpeta_destino,$imagen);
-												if(move_uploaded_file($_FILES['archivo']['tmp_name'], $carpeta_destino.$imagen))
-												{
-													if($_REQUEST['nombre'] && $_REQUEST['codigo'] && $_REQUEST['categoria'] && $_REQUEST['descripcion'] && $_REQUEST['precio'] && $_REQUEST['stock'])
-													{
-														$nombre 		= $_REQUEST['nombre'];
-														$codigo 		= $_REQUEST['codigo'];
-														$categoria 		= $_REQUEST['categoria'];
-														$descripcion 	= $_REQUEST['descripcion'];
-														$precio 		= $_REQUEST['precio'];
-														$stock 			= $_REQUEST['stock'];
-														$cadenaSQL		= "INSERT INTO productos (`nombre`,`codigo`,`categoria`,`descripcion`,`precio`,`stock`,`imagen`) VALUES ('".$nombre."','".$codigo."','".$categoria."','".$descripcion."',".$precio.",".$stock.",'".$imagen."')";
-														$consulta = mysqli_query($conexion,$cadenaSQL);
-														if($consulta)
-														{
-															echo "Los datos se grabaron correctamente.";									
-														}
-														else
-														{
-															eliminarImagen($carpeta_destino,$imagen);
-															echo "¡ERROR!, no se grabaron los datos en la base.";
-														}
-													}
-													else
-													{
-														eliminarImagen($carpeta_destino,$imagen);
-														echo "¡ERROR!, no se puede ingresar datos en blanco a la base.";
-													}
-												}
-												else{echo "¡ERROR!, no se pudo guardar la imagen.";}
-											}	
-											else{echo "¡ERROR!, nombre de la imagen vacio.";}
+												echo "¡ERROR!, no se puede ingresar datos en blanco a la base.";
+											}
 										}
-										else{echo "¡ERROR!, no se grabo la imagen, dimesiones max. 400px X 400px.";}
-									}
-									else{echo "¡ERROR!,  no se grabo la imagen, supera el tamaño permitido 1Mb.";}	
+										else{echo "¡ERROR!, no se pudo guardar la imagen.";}
+									}	
+									else{echo "¡ERROR!, nombre de la imagen vacio.";}	
 								}
 								else{echo "¡ERROR!, la imagen no tiene nombre.";}
 							}						
